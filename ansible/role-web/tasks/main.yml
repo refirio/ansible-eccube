@@ -1,0 +1,108 @@
+- name: install httpd and php7
+  yum:
+    name:
+      - httpd
+      - php
+      - php-cli
+      - php-common
+      - php-devel
+      - php-fpm
+      - php-mbstring
+      - php-mysqlnd
+      - php-pdo
+      - php-gd
+      - php-xml
+      - php-intl
+      - php-zip
+      - php-opcache
+  notify:
+    - restart httpd
+
+- name: modify httpd.conf
+  replace:
+    dest: /etc/httpd/conf/httpd.conf
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+  with_items:
+    - { regexp: "DocumentRoot \"/var/www/html\"", replace: "DocumentRoot \"/var/www/main/html\"" }
+  notify:
+    - restart httpd
+
+- name: create the configuration file
+  template: src=role-web/templates/main.conf.j2 dest=/etc/httpd/conf.d/main.conf owner=root group=root mode=0644
+  notify:
+    - restart httpd
+
+- name: modify php.ini
+  replace:
+    dest: /etc/php.ini
+    regexp: "{{ item.regexp }}"
+    replace: "{{ item.replace }}"
+  with_items:
+    - { regexp: "display_errors = Off", replace: "display_errors = On" }
+    - { regexp: ";date.timezone =", replace: "date.timezone = Asia/Tokyo" }
+    - { regexp: ";mbstring.language = Japanese", replace: "mbstring.language = Japanese" }
+    - { regexp: ";mbstring.internal_encoding =", replace: "mbstring.internal_encoding = UTF-8" }
+    - { regexp: ";mbstring.http_input =", replace: "mbstring.http_input = pass" }
+    - { regexp: ";mbstring.http_output =", replace: "mbstring.http_output = pass" }
+    - { regexp: ";mbstring.encoding_translation = Off", replace: "mbstring.encoding_translation = Off" }
+    - { regexp: ";mbstring.detect_order = auto", replace: "mbstring.detect_order = UTF-8,SJIS,EUC-JP,JIS,ASCII" }
+    - { regexp: ";mbstring.substitute_character = none", replace: "mbstring.substitute_character = none" }
+    - { regexp: ";mbstring.func_overload = 0", replace: "mbstring.func_overload = 0" }
+    - { regexp: ";mbstring.strict_detection = On", replace: "mbstring.strict_detection = Off" }
+  notify:
+    - restart httpd
+
+- name: check composer
+  stat: path=/usr/local/bin/composer
+  register: composer_bin
+  tags: composer
+
+- block:
+  - name: download composer
+    shell: curl -sS https://getcomposer.org/installer | php -- --version=1.10.15
+
+  - name: rename composer.phar to composer
+    shell: mv composer.phar /usr/local/bin/composer
+
+  - name: create directory for cache
+    file:
+      dest: /usr/share/httpd/.cache
+      owner: "{{ web.username }}"
+      group: "{{ web.username }}"
+      mode: 0755
+      state: directory
+
+  when: not composer_bin.stat.exists
+  tags: composer
+
+- name: check directory for main
+  stat: path=/var/www/main
+  register: directory_main
+  tags: main
+
+- block:
+  - name: create directory for main
+    file:
+      dest: /var/www/main
+      owner: "{{ web.username }}"
+      group: "{{ web.username }}"
+      mode: 0755
+      state: directory
+
+  - name: create directory for html
+    file:
+      dest: /var/www/main/html
+      owner: "{{ web.username }}"
+      group: "{{ web.username }}"
+      mode: 0755
+      state: directory
+
+  - name: create the index file
+    template: src=role-web/templates/index.php.j2 dest=/var/www/main/html/index.php owner="{{ web.username }}" group="{{ web.username }}" mode=0644
+
+  when: not directory_main.stat.exists
+  tags: main
+
+- name: enable autostart for httpd
+  service: name=httpd enabled=yes

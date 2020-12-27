@@ -1,0 +1,9 @@
+- name: setup the webservers
+  hosts: localhost
+  become: yes
+  become_user: root
+
+  roles:
+  - role-common
+  - role-web
+  - role-db

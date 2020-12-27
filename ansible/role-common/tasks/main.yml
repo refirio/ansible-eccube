@@ -1,0 +1,34 @@
+- name: check locale
+  command: localectl status
+  register: localectl_result
+  check_mode: no
+  changed_when: false
+
+- name: set locale
+  command: localectl set-locale LANG=ja_JP.UTF-8
+  when: "'LANG=ja_JP.UTF-8' not in localectl_result.stdout"
+
+- name: set timezone
+  timezone:
+    name: Asia/Tokyo
+
+- name: install yum-fastestmirror
+  yum:
+    name:
+      - yum-fastestmirror
+
+- name: install yum-cron
+  yum:
+    name:
+      - yum-cron
+  notify:
+    - restart yum-cron
+
+- name: install development tools
+  yum:
+    name: ['@Base', '@Development Tools']
+
+- name: install mailx
+  yum:
+    name:
+      - mailx
