@@ -15,7 +15,7 @@
 ```bash
 $ sudo su -
 # amazon-linux-extras install ansible2 -y
-# amazon-linux-extras install php7.3 -y
+# amazon-linux-extras install php7.4 -y
 ```
 
 本番用の構築なら、以下なども作業する
@@ -29,7 +29,7 @@ Playbookは `/home/ec2-user/ansible` に配置するものとする
 
 ## ローカル開発環境: Vagrantを準備
 
-VagrantでCentOS7を新規にインストールし、そこに開発環境（Apache 2.4.6 + PHP 7.3 + MariaDB 5.5）を構築する<br>
+VagrantでCentOS7を新規にインストールし、そこに開発環境（Apache 2.4.6 + PHP 7.4 + MariaDB 5.5）を構築する<br>
 作業フォルダは、ここでは `C:\Users\refirio\Vagrant\eccube4` とする<br>
 VagrantのIPアドレスは、ここでは `192.168.33.10` とする
 
@@ -98,10 +98,21 @@ Playbook は `code/ansible-develop` に配置するものとする（つまり�
 
 ### 初期起動時にエラーになった場合
 
+Guest Additions を自動でアップデートしてくれるプラグインを導入する
+
 ```
 >vagrant plugin install vagrant-vbguest
 >vagrant halt
 >vagrant up
+```
+
+解消されなければ、さらにサーバ内でカーネルのアップデートを行う
+
+```
+>vagrant ssh
+$ sudo yum install -y kernel kernel-devel gcc
+$ exit
+>vagrant reload
 ```
 
 ### Ansibleをインストール
