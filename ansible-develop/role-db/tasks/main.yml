@@ -7,7 +7,7 @@
     - restart mariadb
 
 - name: create the configuration file
-  template: src=role-db/templates/my.cnf.j2 dest=/etc/my.cnf owner=root group=root mode=0644
+  template: src=role-db/templates/main.cnf.j2 dest=/etc/my.cnf.d/main.cnf owner=root group=root mode=0644
   notify:
     - restart mariadb
 

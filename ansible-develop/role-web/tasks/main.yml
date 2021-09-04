@@ -10,7 +10,7 @@
 
 - name: install httpd and php7
   yum:
-    enablerepo: remi-php73
+    enablerepo: remi-php74
     name:
       - httpd
       - php
@@ -29,38 +29,13 @@
   notify:
     - restart httpd
 
-- name: modify httpd.conf
-  replace:
-    dest: /etc/httpd/conf/httpd.conf
-    regexp: "{{ item.regexp }}"
-    replace: "{{ item.replace }}"
-  with_items:
-    - { regexp: "DocumentRoot \"/var/www/html\"", replace: "DocumentRoot \"/var/www/main/html\"" }
-  notify:
-    - restart httpd
-
 - name: create the configuration file
   template: src=role-web/templates/main.conf.j2 dest=/etc/httpd/conf.d/main.conf owner=root group=root mode=0644
   notify:
     - restart httpd
 
-- name: modify php.ini
-  replace:
-    dest: /etc/php.ini
-    regexp: "{{ item.regexp }}"
-    replace: "{{ item.replace }}"
-  with_items:
-    - { regexp: "display_errors = Off", replace: "display_errors = On" }
-    - { regexp: ";date.timezone =", replace: "date.timezone = Asia/Tokyo" }
-    - { regexp: ";mbstring.language = Japanese", replace: "mbstring.language = Japanese" }
-    - { regexp: ";mbstring.internal_encoding =", replace: "mbstring.internal_encoding = UTF-8" }
-    - { regexp: ";mbstring.http_input =", replace: "mbstring.http_input = pass" }
-    - { regexp: ";mbstring.http_output =", replace: "mbstring.http_output = pass" }
-    - { regexp: ";mbstring.encoding_translation = Off", replace: "mbstring.encoding_translation = Off" }
-    - { regexp: ";mbstring.detect_order = auto", replace: "mbstring.detect_order = UTF-8,SJIS,EUC-JP,JIS,ASCII" }
-    - { regexp: ";mbstring.substitute_character = none", replace: "mbstring.substitute_character = none" }
-    - { regexp: ";mbstring.func_overload = 0", replace: "mbstring.func_overload = 0" }
-    - { regexp: ";mbstring.strict_detection = On", replace: "mbstring.strict_detection = Off" }
+- name: create the php configuration file
+  template: src=role-web/templates/main.ini.j2 dest=/etc/php.d/main.ini owner=root group=root mode=0644
   notify:
     - restart httpd
 
