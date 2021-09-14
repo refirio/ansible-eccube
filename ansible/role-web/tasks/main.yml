@@ -24,7 +24,7 @@
     - restart httpd
 
 - name: create the php configuration file
-  template: src=role-web/templates/main.ini.j2 dest=/etc/php.d/main.ini owner=root group=root mode=0644
+  template: src=role-web/templates/php.ini.j2 dest=/etc/php.d/php.ini owner=root group=root mode=0644
   notify:
     - restart httpd
 
